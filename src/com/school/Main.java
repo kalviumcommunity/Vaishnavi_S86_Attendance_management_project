@@ -1,4 +1,8 @@
+
 package com.school;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -26,6 +30,18 @@ public class Main {
         for (Course c : courses) {
             c.displayDetails();
             System.out.println();
+        }
+
+        // Attendance log
+        List<AttendanceRecord> attendanceLog = new ArrayList<>();
+        attendanceLog.add(new AttendanceRecord(students[0].getStudentId(), courses[0].getCourseId(), "Present"));
+        attendanceLog.add(new AttendanceRecord(students[1].getStudentId(), courses[1].getCourseId(), "Absent"));
+        attendanceLog.add(new AttendanceRecord(students[2].getStudentId(), courses[2].getCourseId(), "Late")); // Invalid status
+        attendanceLog.add(new AttendanceRecord(students[3].getStudentId(), courses[0].getCourseId(), "present")); // Lowercase, should be valid
+
+        System.out.println("----- Attendance Records -----");
+        for (AttendanceRecord record : attendanceLog) {
+            record.displayRecord();
         }
     }
 }
