@@ -47,28 +47,32 @@ public class Main {
             System.out.println();
         }
 
-        System.out.println("----- Attendance Records -----");
-        for (AttendanceRecord record : records) {
-            record.displayRecord();
-        }
-
-        // Save data to files
+        // Create storage & service
         FileStorageService storage = new FileStorageService();
+        AttendanceService attendanceService = new AttendanceService(storage);
 
-        // If saving directly from students list (easy):
+        // Use AttendanceService markAttendance overload (object-based)
+        attendanceService.markAttendance(students.get(0), courses.get(0), "Present");
+        attendanceService.markAttendance(students.get(1), courses.get(1), "Absent");
+
+        // Use id-based overload which looks up objects
+        attendanceService.markAttendance(students.get(0).getId(), courses.get(1).getCourseId(), "Present", students, courses);
+
+        System.out.println("----- Attendance Records (via AttendanceService) -----");
+        attendanceService.displayAttendanceLog();
+        System.out.println();
+
+        // Display filtered logs
+        attendanceService.displayAttendanceLog(students.get(0));
+        System.out.println();
+        attendanceService.displayAttendanceLog(courses.get(1));
+        System.out.println();
+
+        // Save attendance via service
+        attendanceService.saveAttendanceData();
+
+        // Also save other entity files directly for completeness
         storage.saveData(students, "students.txt");
-
-        // Or, if you had only the polymorphic schoolPeople list, filter Students:
-        ArrayList<Student> studentsToSave = new ArrayList<>();
-        for (Person p : schoolPeople) {
-            if (p instanceof Student) {
-                studentsToSave.add((Student) p);
-            }
-        }
-        // studentsToSave now contains Student instances from schoolPeople
-        storage.saveData(studentsToSave, "students_from_directory.txt");
-
         storage.saveData(courses, "courses.txt");
-        storage.saveData(records, "attendance_log.txt");
     }
 }
