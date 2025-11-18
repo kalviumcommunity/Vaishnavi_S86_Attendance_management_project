@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void displaySchoolDirectory(List<Person> people) {
+    public static void displaySchoolDirectory(RegistrationService regService) {
         System.out.println("----- School Directory -----");
+        List<Person> people = regService.getAllPeople();
         for (Person p : people) {
             p.displayDetails();
             System.out.println();
@@ -14,65 +15,60 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        // Create and populate students
-        ArrayList<Student> students = new ArrayList<>();
-        students.add(new Student("Alice", "10th Grade"));
-        students.add(new Student("Bob", "11th Grade"));
 
-        // Create and populate courses
-        ArrayList<Course> courses = new ArrayList<>();
-        courses.add(new Course("Mathematics"));
-        courses.add(new Course("Physics"));
+        // Create storage, registration service & attendance service
+        FileStorageService storage = new FileStorageService();
+        RegistrationService regService = new RegistrationService(storage);
+
+        // Register students
+        Student s1 = regService.registerStudent("Alice", "10th Grade");
+        Student s2 = regService.registerStudent("Bob", "11th Grade");
+
+        // Create courses
+        Course c1 = regService.createCourse("Mathematics");
+        Course c2 = regService.createCourse("Physics");
 
         // Create and populate attendance records (pass Student and Course objects)
-        ArrayList<AttendanceRecord> records = new ArrayList<>();
-        records.add(new AttendanceRecord(students.get(0), courses.get(0), "Present"));
-        records.add(new AttendanceRecord(students.get(1), courses.get(1), "Absent"));
+        // (AttendanceService will manage the records now)
 
-        // Create teacher and staff
-        Teacher teacher = new Teacher("Mr. Smith", "Mathematics");
-        Staff staff = new Staff("Mrs. Brown", "Librarian");
+        // Register teacher and staff via registration service
+        Teacher teacher = regService.registerTeacher("Mr. Smith", "Mathematics");
+        Staff staff = regService.registerStaff("Mrs. Brown", "Librarian");
 
         System.out.println("----- Person Details -----");
-        // Build a polymorphic list and display via the helper
-        List<Person> schoolPeople = new ArrayList<>();
-        schoolPeople.addAll(students);
-        schoolPeople.add(teacher);
-        schoolPeople.add(staff);
-        displaySchoolDirectory(schoolPeople);
+        // Display directory from registration service
+        displaySchoolDirectory(regService);
 
         System.out.println("----- Course Details -----");
-        for (Course c : courses) {
+        for (Course c : regService.getCourses()) {
             c.displayDetails();
             System.out.println();
         }
 
-        // Create storage & service
-        FileStorageService storage = new FileStorageService();
-        AttendanceService attendanceService = new AttendanceService(storage);
+        // Create attendance service, injected with registration service
+        AttendanceService attendanceService = new AttendanceService(storage, regService);
 
         // Use AttendanceService markAttendance overload (object-based)
-        attendanceService.markAttendance(students.get(0), courses.get(0), "Present");
-        attendanceService.markAttendance(students.get(1), courses.get(1), "Absent");
+        attendanceService.markAttendance(s1, c1, "Present");
+        attendanceService.markAttendance(s2, c2, "Absent");
 
-        // Use id-based overload which looks up objects
-        attendanceService.markAttendance(students.get(0).getId(), courses.get(1).getCourseId(), "Present", students, courses);
+        // Use id-based overload which looks up objects via RegistrationService
+        attendanceService.markAttendance(s1.getId(), c2.getCourseId(), "Present");
 
         System.out.println("----- Attendance Records (via AttendanceService) -----");
         attendanceService.displayAttendanceLog();
         System.out.println();
 
         // Display filtered logs
-        attendanceService.displayAttendanceLog(students.get(0));
+        attendanceService.displayAttendanceLog(s1);
         System.out.println();
-        attendanceService.displayAttendanceLog(courses.get(1));
+        attendanceService.displayAttendanceLog(c2);
         System.out.println();
 
         // Save attendance via service
         attendanceService.saveAttendanceData();
 
-        // Also save other entity files directly for completeness
-        storage.saveData(students, "students.txt");
-        storage.saveData(courses, "courses.txt");
+        // Save registrations via registration service
+        regService.saveAllRegistrations();
     }
 }
