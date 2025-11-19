@@ -24,9 +24,9 @@ public class Main {
         Student s1 = regService.registerStudent("Alice", "10th Grade");
         Student s2 = regService.registerStudent("Bob", "11th Grade");
 
-        // Create courses
-        Course c1 = regService.createCourse("Mathematics");
-        Course c2 = regService.createCourse("Physics");
+        // Create courses with capacities
+        Course c1 = regService.createCourse("Mathematics", 1); // capacity 1
+        Course c2 = regService.createCourse("Physics", 2); // capacity 2
 
         // Create and populate attendance records (pass Student and Course objects)
         // (AttendanceService will manage the records now)
@@ -48,9 +48,25 @@ public class Main {
         // Create attendance service, injected with registration service
         AttendanceService attendanceService = new AttendanceService(storage, regService);
 
-        // Use AttendanceService markAttendance overload (object-based)
-        attendanceService.markAttendance(s1, c1, "Present");
-        attendanceService.markAttendance(s2, c2, "Absent");
+        // Enroll students (including a failing over-capacity attempt)
+        regService.enrollStudentInCourse(s1, c1); // should succeed
+        regService.enrollStudentInCourse(s2, c1); // should fail (capacity 1)
+        regService.enrollStudentInCourse(s2, c2); // should succeed
+
+        // Show updated course details after enrollment
+        System.out.println("----- Course Details After Enrollment -----");
+        for (Course c : regService.getCourses()) {
+            c.displayDetails();
+            System.out.println();
+        }
+
+        // Use AttendanceService markAttendance overload (object-based) only if enrolled
+        if (c1.getEnrolledStudents().contains(s1)) {
+            attendanceService.markAttendance(s1, c1, "Present");
+        }
+        if (c2.getEnrolledStudents().contains(s2)) {
+            attendanceService.markAttendance(s2, c2, "Absent");
+        }
 
         // Use id-based overload which looks up objects via RegistrationService
         attendanceService.markAttendance(s1.getId(), c2.getCourseId(), "Present");
