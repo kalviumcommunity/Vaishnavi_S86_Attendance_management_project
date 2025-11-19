@@ -1,2 +1,2 @@
-101,Mathematics
-102,Physics
+101,Mathematics,1
+102,Physics,2
